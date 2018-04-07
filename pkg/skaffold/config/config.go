@@ -122,12 +122,15 @@ type ArtifactType struct {
 	BazelArtifact  *BazelArtifact  `yaml:"bazel"`
 }
 
-type DockerArtifact struct {
-	DockerfilePath string             `yaml:"dockerfilePath,omitempty"`
-	BuildArgs      map[string]*string `yaml:"buildArgs,omitempty"`
+type ArtifactBaseImage struct {
+	ImageName string `yaml:"imageName"`
+	BuildArg  string `yaml:"buildArg"`
+}
 
-	BaseImage         string `yaml:"baseImage,omitempty"`
-	BaseImageBuildArg string `yaml:"baseImageBuildArg,omitempty"`
+type DockerArtifact struct {
+	DockerfilePath string              `yaml:"dockerfilePath,omitempty"`
+	BuildArgs      map[string]*string  `yaml:"buildArgs,omitempty"`
+	BaseImages     []ArtifactBaseImage `yaml:"baseImages,omitempty"`
 }
 
 type BazelArtifact struct {
