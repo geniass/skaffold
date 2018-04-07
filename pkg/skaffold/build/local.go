@@ -95,6 +95,30 @@ func (l *LocalBuilder) Build(ctx context.Context, out io.Writer, tagger tag.Tagg
 		Builds: []Build{},
 	}
 	for _, artifact := range artifacts {
+		if artifact.DockerArtifact != nil && artifact.DockerArtifact.BaseImage != "" {
+			// its a Docker artifact and it depends on a base image. So get the base image name and tag
+			logrus.Debugf("Image has a base image dependency: image=%s baseImage=%s buildArg=%s", artifact.ImageName, artifact.DockerArtifact.BaseImage, artifact.DockerArtifact.BaseImageBuildArg)
+			var baseImageBuild Build
+			for _, build := range res.Builds {
+				if build.ImageName == artifact.DockerArtifact.BaseImage {
+					// found a match
+					baseImageBuild = build
+					break
+				}
+			}
+			if baseImageBuild.Tag == "" {
+				return nil, errors.Errorf("getting base image build result: image=%s baseImage=%s", artifact.ImageName,
+					artifact.DockerArtifact.BaseImage)
+			}
+
+			logrus.Debugf("Found baseImage: %s", baseImageBuild.Tag)
+			if artifact.DockerArtifact.BuildArgs == nil {
+				artifact.DockerArtifact.BuildArgs = map[string]*string{}
+			}
+			logrus.Infof("TAG: %s", &baseImageBuild.Tag)
+			artifact.DockerArtifact.BuildArgs[artifact.DockerArtifact.BaseImageBuildArg] = &baseImageBuild.Tag
+		}
+
 		initialTag, err := l.runBuildForArtifact(ctx, out, artifact)
 		if err != nil {
 			return nil, errors.Wrap(err, "running build for artifact")
